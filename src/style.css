@@ -1,0 +1,18 @@
+#grid{
+    width: 1000px;
+}
+#grid tr{
+    height: 100px;
+}
+
+.red{
+    background-color: green;
+}
+
+.green{
+    background-color: red;
+}
+
+.yellow{
+    background-color: yellow;
+}
