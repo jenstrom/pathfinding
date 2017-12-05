@@ -15,25 +15,28 @@ const map = [
     [0,0,0,0,0,0,0,0,0,0],
 ];
 
-const pathFinder = (start: point, target: point):point[] => 
-    getNodeAncestry([last(
+const pathFinder = (start: point, target: point, map?: number[][]):point[] => 
+!map || pointIsValid(start, map) && pointIsValid(target, map) ?
+getNodeAncestry([last(
         findTarget(
-            [createNodeWithTarget(start, 0, null, target)], target)
+            [createNodeWithTarget(start, 0, null, target)], target, map)
         )])
-        .map(n => n.position).reverse();
+        .map(n => n.position).reverse() : [];
 
-const findTarget = (closedList: node[], target: point, openList:node[] = [], loops = 0): node[] => {
-    if (pointsAreEqual(last(closedList).position, target) || loops === 1000){
+const findTarget = (closedList: node[], target: point, map?: number[][], openList:node[] = [], loops = 0): node[] => {
+    if (pointsAreEqual(last(closedList).position, target) || loops === 1000 || !pointIsValid(last(closedList).position, map)){
         console.log(loops);
         return closedList;
     }
     openList = openList.concat(
         getChildNodes(last(closedList), target).filter(c => 
-            !closedList.some(n => pointsAreEqual(n.position, c.position)) ||
-            !openList.some(n => pointsAreEqual(n.position, c.position))
+            (!map || map[c.position.y][c.position.x] !== 0) &&
+            (!closedList.some(n => pointsAreEqual(n.position, c.position)) ||
+            !openList.some(n => pointsAreEqual(n.position, c.position)))
         )
     );
     openList = openList.map(n => 
+        pointsAreAdjacent(n.position, last(closedList).position) &&
         n.parent.distanceFromStart > last(closedList).distanceFromStart ?
         createNodeWithTarget(n.position, last(closedList).distanceFromStart + 1, last(closedList), target) :
         n
@@ -41,6 +44,7 @@ const findTarget = (closedList: node[], target: point, openList:node[] = [], loo
     return findTarget(closedList.concat(
         openList.sort((n1, n2) => n1.supposedDistanceFromTarget - n2.supposedDistanceFromTarget)[0]),
         target,
+        map,
         openList.slice(1),
         loops+1
     );
@@ -48,7 +52,13 @@ const findTarget = (closedList: node[], target: point, openList:node[] = [], loo
 
 const getNodeAncestry = (nodes: node[]):node[] => last(nodes).parent ? getNodeAncestry(nodes.concat(last(nodes).parent)) : nodes;
 
+const pointsAreAdjacent = (point1, point2) => directions.some(d => pointsAreEqual(addPoints(point1, d), point2));
+
 const pointsAreEqual = (point1: point, point2: point): boolean => point1.x === point2.x && point1.y === point2.y;
+
+const pointIsValid = (point: point, map?: number[][]) => !map || !(point.x < 0) && !(point.y < 0) && !(point.x >= map[0].length) && !(point.y >= map.length) && getTileTypeOfPoint(point, map);
+
+const getTileTypeOfPoint = (point: point, map: number[][]) => map[point.y][point.x];
 
 const last = (array) => array[array.length - 1];
 
@@ -106,6 +116,7 @@ const grid: HTMLTableElement = getElement('grid') as HTMLTableElement;
 
 
 const drawGrid = (grid: HTMLTableElement, map: number[][]): void => {
+    grid.innerHTML = '';
     map.forEach(v => {
         let row = grid.appendChild(createTr());
         v.forEach(c => row.appendChild(createTd(c)));
@@ -119,9 +130,19 @@ const drawPath = (moves: point[]) => grid.children ?
         )
     ) : ''
 
+getElement('go').addEventListener('click', () => {
+    drawGrid(grid, map);
+    let x1: number = parseInt((getElement('x1') as HTMLInputElement).value);
+    let y1: number = parseInt((getElement('y1') as HTMLInputElement).value);
+    let x2: number = parseInt((getElement('x2') as HTMLInputElement).value);
+    let y2: number = parseInt((getElement('y2') as HTMLInputElement).value);
+    return x1 && y1 && x2 && y2 &&
+    drawPath(pathFinder({x: x1, y:y1}, {x: x2, y:y2}, map))
+});
+
 drawGrid(grid, map);
-drawPath(pathFinder({x: 0, y:0}, {x: 4, y:7}));
-console.log(pathFinder({x: 0, y:0}, {x: 4, y:7}));
+// drawPath(pathFinder({x: 1, y:1}, {x: 2, y:2}, map));
+// console.log(pathFinder({x: 1, y:1}, {x: 4, y:7}, map));
 let pos1: point = {x: 12, y: 12};
 let pos2: point = {x: 12, y: 12};
 console.log(pointsAreEqual(pos1, pos2));
