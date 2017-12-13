@@ -2,35 +2,44 @@ type point = {x: number, y: number};
 
 type node = { position: point, distanceFromStart: number, supposedDistanceFromTarget: number, parent: node }
 
-const map = [
+const level = [
     [0,0,0,0,0,0,0,0,0,0],
-    [0,1,1,1,1,1,1,1,1,0],
-    [0,1,1,1,1,1,1,1,1,0],
+    [0,1,0,1,1,1,1,1,1,0],
+    [0,1,1,1,1,0,1,1,1,0],
     [0,1,1,0,0,0,0,1,1,0],
     [0,1,1,0,1,1,1,1,1,0],
-    [0,1,1,0,0,1,1,1,1,0],
-    [0,1,1,1,1,1,1,1,1,0],
-    [0,1,1,1,1,1,1,1,1,0],
+    [0,1,0,0,0,1,1,0,1,0],
+    [0,1,0,1,1,1,1,0,1,0],
+    [0,1,0,1,0,0,0,0,1,0],
     [0,1,1,1,1,1,1,1,1,0],
     [0,0,0,0,0,0,0,0,0,0],
 ];
 
-const pathFinder = (start: point, target: point, map?: number[][]):point[] => 
-!map || pointIsValid(start, map) && pointIsValid(target, map) ?
+let start: point = {x:0, y:0};
+let target: point = {x:0, y:0};
+let settingStart = true;
+
+const setStartX = (x: number) => { start.x = x };
+const setStartY = (y: number) => { start.y = y };
+const setTargetX = (x: number) => { target.x = x };
+const setTargetY = (y: number) => { target.y = y };
+
+const pathFinder = (start: point, target: point, level?: number[][]):point[] => 
+!level || pointIsValid(start, level) && pointIsValid(target, level) ?
 getNodeAncestry([last(
         findTarget(
-            [createNodeWithTarget(start, 0, null, target)], target, map)
+            [createNodeWithTarget(start, 0, null, target)], target, level)
         )])
         .map(n => n.position).reverse() : [];
 
-const findTarget = (closedList: node[], target: point, map?: number[][], openList:node[] = [], loops = 0): node[] => {
-    if (pointsAreEqual(last(closedList).position, target) || loops === 1000 || !pointIsValid(last(closedList).position, map)){
+const findTarget = (closedList: node[], target: point, level?: number[][], openList:node[] = [], loops = 0): node[] => {
+    if (pointsAreEqual(last(closedList).position, target) || loops === 1000 || !pointIsValid(last(closedList).position, level)){
         console.log(loops);
         return closedList;
     }
     openList = openList.concat(
         getChildNodes(last(closedList), target).filter(c => 
-            (!map || map[c.position.y][c.position.x] !== 0) &&
+            (!level || level[c.position.y][c.position.x] !== 0) &&
             (!closedList.some(n => pointsAreEqual(n.position, c.position)) ||
             !openList.some(n => pointsAreEqual(n.position, c.position)))
         )
@@ -44,7 +53,7 @@ const findTarget = (closedList: node[], target: point, map?: number[][], openLis
     return findTarget(closedList.concat(
         openList.sort((n1, n2) => n1.supposedDistanceFromTarget - n2.supposedDistanceFromTarget)[0]),
         target,
-        map,
+        level,
         openList.slice(1),
         loops+1
     );
@@ -56,9 +65,9 @@ const pointsAreAdjacent = (point1, point2) => directions.some(d => pointsAreEqua
 
 const pointsAreEqual = (point1: point, point2: point): boolean => point1.x === point2.x && point1.y === point2.y;
 
-const pointIsValid = (point: point, map?: number[][]) => !map || !(point.x < 0) && !(point.y < 0) && !(point.x >= map[0].length) && !(point.y >= map.length) && getTileTypeOfPoint(point, map);
+const pointIsValid = (point: point, level?: number[][]) => !level || !(point.x < 0) && !(point.y < 0) && !(point.x >= level[0].length) && !(point.y >= level.length) && getTileTypeOfPoint(point, level);
 
-const getTileTypeOfPoint = (point: point, map: number[][]) => map[point.y][point.x];
+const getTileTypeOfPoint = (point: point, level: number[][]) => level[point.y][point.x];
 
 const last = (array) => array[array.length - 1];
 
@@ -115,11 +124,16 @@ const changeColor = (td: HTMLTableDataCellElement, type: number) => td.className
 const grid: HTMLTableElement = getElement('grid') as HTMLTableElement;
 
 
-const drawGrid = (grid: HTMLTableElement, map: number[][]): void => {
+const drawGrid = (grid: HTMLTableElement, level: number[][]): void => {
     grid.innerHTML = '';
-    map.forEach(v => {
-        let row = grid.appendChild(createTr());
-        v.forEach(c => row.appendChild(createTd(c)));
+    level.forEach((v, i) => {
+        let tr = createTr();
+        tr.addEventListener('click', () => settingStart ? setStartY(i) : setTargetY(i));
+        let row = grid.appendChild(tr);
+        v.forEach((c, j) => {
+            let td = createTd(c);
+            td.addEventListener('click', () => settingStart ? setStartX(j) : setTargetX(j));
+            row.appendChild(td)});
     });
 }
 
@@ -130,19 +144,23 @@ const drawPath = (moves: point[]) => grid.children ?
         )
     ) : ''
 
+
+getElement('set').addEventListener('click', () => {
+    settingStart = !settingStart;
+    getElement('set').innerText = settingStart ? 'set end' : 'set start';
+});
+
 getElement('go').addEventListener('click', () => {
-    drawGrid(grid, map);
+    drawGrid(grid, level);
     let x1: number = parseInt((getElement('x1') as HTMLInputElement).value);
     let y1: number = parseInt((getElement('y1') as HTMLInputElement).value);
     let x2: number = parseInt((getElement('x2') as HTMLInputElement).value);
     let y2: number = parseInt((getElement('y2') as HTMLInputElement).value);
-    return x1 && y1 && x2 && y2 &&
-    drawPath(pathFinder({x: x1, y:y1}, {x: x2, y:y2}, map))
+    x1 && y1 && x2 && y2 ?
+    drawPath(pathFinder({x: x1, y:y1}, {x: x2, y:y2}, level)) :
+    drawPath(pathFinder(start, target, level));
 });
 
-drawGrid(grid, map);
-// drawPath(pathFinder({x: 1, y:1}, {x: 2, y:2}, map));
-// console.log(pathFinder({x: 1, y:1}, {x: 4, y:7}, map));
-let pos1: point = {x: 12, y: 12};
-let pos2: point = {x: 12, y: 12};
-console.log(pointsAreEqual(pos1, pos2));
+drawGrid(grid, level);
+// drawPath(pathFinder({x: 1, y:1}, {x: 2, y:2}, level));
+// console.log(pathFinder({x: 1, y:1}, {x: 4, y:7}, level));
