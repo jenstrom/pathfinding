@@ -26,38 +26,35 @@ const setTargetY = (y: number) => { target.y = y };
 
 const pathFinder = (start: point, target: point, level?: number[][]):point[] => 
 !level || pointIsValid(start, level) && pointIsValid(target, level) ?
-getNodeAncestry([last(
+    getNodeAncestry([last(
         findTarget(
             [createNodeWithTarget(start, 0, null, target)], target, level)
         )])
         .map(n => n.position).reverse() : [];
 
-const findTarget = (closedList: node[], target: point, level?: number[][], openList:node[] = [], loops = 0): node[] => {
-    if (pointsAreEqual(last(closedList).position, target) || loops === 1000 || !pointIsValid(last(closedList).position, level)){
-        console.log(loops);
-        return closedList;
-    }
-    openList = openList.concat(
-        getChildNodes(last(closedList), target).filter(c => 
-            (!level || level[c.position.y][c.position.x] !== 0) &&
-            (!closedList.some(n => pointsAreEqual(n.position, c.position)) ||
-            !openList.some(n => pointsAreEqual(n.position, c.position)))
-        )
-    );
-    openList = openList.map(n => 
-        pointsAreAdjacent(n.position, last(closedList).position) &&
-        n.parent.distanceFromStart > last(closedList).distanceFromStart ?
-        createNodeWithTarget(n.position, last(closedList).distanceFromStart + 1, last(closedList), target) :
-        n
-    );
-    return findTarget(closedList.concat(
-        openList.sort((n1, n2) => n1.supposedDistanceFromTarget - n2.supposedDistanceFromTarget)[0]),
+const findTarget = (openList: node[], target: point, level?: number[][], closedList:node[] = [], loops = 0): node[] => 
+    pointsAreEqual(openList[0].position, target) || loops === 1000 || !pointIsValid(openList[0].position, level) ?
+    closedList.concat(openList[0]) :
+    findTarget(
+        openList.concat(
+            getChildNodes(openList[0], target).filter(c => 
+                (!level || level[c.position.y][c.position.x] !== 0) &&
+                (!closedList.some(n => pointsAreEqual(n.position, c.position)) ||
+                !openList.some(n => pointsAreEqual(n.position, c.position)))
+            ))
+        .map(n => 
+            pointsAreAdjacent(n.position, openList[0].position) &&
+            n.parent.distanceFromStart > openList[0].distanceFromStart ?
+            createNodeWithTarget(n.position, openList[0].distanceFromStart + 1, openList[0], target) :
+            n)
+        .slice(1)
+        .sort((n1, n2) => n1.supposedDistanceFromTarget - n2.supposedDistanceFromTarget),
         target,
         level,
-        openList.slice(1),
+        closedList.concat(openList[0]),
         loops+1
     );
-};
+
 
 const getNodeAncestry = (nodes: node[]):node[] => last(nodes).parent ? getNodeAncestry(nodes.concat(last(nodes).parent)) : nodes;
 
@@ -72,8 +69,8 @@ const getTileTypeOfPoint = (point: point, level: number[][]) => level[point.y][p
 const last = (array) => array[array.length - 1];
 
 const getDistanceBetweenPoints = (point1: point, point2: point): number =>
-Math.abs(point1.y - point2.y) +
-Math.abs(point1.x - point2.x);
+    Math.abs(point1.y - point2.y) +
+    Math.abs(point1.x - point2.x);
 
 const createNodeWithTarget = (position: point, distanceFromStart: number, parent: node, target: point): node => {
     return {
