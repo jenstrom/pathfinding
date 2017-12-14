@@ -1,8 +1,9 @@
-#grid{
-    width: 1000px;
-}
 #grid tr{
     height: 100px;
+}
+
+#grid tr td{
+    width: 100px;
 }
 
 .red{
