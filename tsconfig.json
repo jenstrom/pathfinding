@@ -1,10 +1,12 @@
 {
     "compilerOptions": {
         "module": "commonjs",
+        "jsx": "react",
         "outDir": "./js"
     },
     "include": [
         "./src/**/*.ts",
+        "./src/**/*.tsx",
         "./test/**/*.ts"
     ]
 }
