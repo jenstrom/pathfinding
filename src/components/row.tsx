@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { point } from './pathfinder';
+import { point } from '../pathfinding/pathfinder';
 import Tile from './tile';
 
 export default ({tileList, path, y, pfCallBack}: {tileList: number[], path: point[], y: number, pfCallBack: () => void }): JSX.Element => 

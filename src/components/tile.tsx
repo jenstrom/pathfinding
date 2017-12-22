@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { tileColors } from './colors';
-import { setPoints } from './pathfinder';
+import { tileColors } from '../constants/colors';
+import { setPoints } from '../pathfinding/pathfinder';
 
 export default ({tileType, x, y, pfCallBack}: {tileType: number, x:number, y: number, pfCallBack: () => void}): JSX.Element => 
     <td 

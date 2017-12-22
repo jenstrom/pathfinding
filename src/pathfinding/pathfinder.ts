@@ -1,4 +1,4 @@
-import { level } from './level';
+import { level } from '../constants/level';
 
 export type point = {x: number, y: number};
 

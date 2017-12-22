@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { level } from './level';
-import Main from './main';
+import { level } from './constants/level';
+import Main from './components/main';
 
 ReactDOM.render(
     <Main level={level}/>,

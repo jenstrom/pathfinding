@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { findPath, point, setPoints } from './pathfinder';
+import { findPath, point, setPoints } from '../pathfinding/pathfinder';
 import Row from './row';
 
 export interface IMainState {
