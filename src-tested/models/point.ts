@@ -5,4 +5,8 @@ export class Point {
         this.x = x || 0;
         this.y = y || 0;
     }
+
+    public equalTo = (otherPoint: Point) => 
+        this.x === otherPoint.x &&
+        this.y === otherPoint.y;
 }

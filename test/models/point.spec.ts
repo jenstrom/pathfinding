@@ -32,4 +32,25 @@ describe('Point', () => {
             });
         });
     });
+    describe('equalTo', () => {
+        let point: Point;
+        before(() => {
+            point = new Point(1, 1);
+        });
+
+        it('should return true if x and y on point are equal to x and y on otherPoint', () => {
+            const result = point.equalTo(new Point(1, 1));
+            Chai.expect(result).to.be.true;
+        });
+        
+        it('should return false if x on point is not equal to x on otherPoint', () => {
+            const result = point.equalTo(new Point(2, 1));
+            Chai.expect(result).to.be.false;
+        });
+        
+        it('should return false if y on point is not equal to y on otherPoint', () => {
+            const result = point.equalTo(new Point(1, 2));
+            Chai.expect(result).to.be.false;
+        });
+    });
 });
